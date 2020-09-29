@@ -33,46 +33,70 @@ public class Executor extends Pcl4BaseVisitor<Object>
     
     public Object visitCompoundStatement(Pcl4Parser.CompoundStatementContext ctx)
     {
-        System.out.println("Visiting compound statement");        
+        //System.out.println(visit(ctx.statementList()));        
         return visit(ctx.statementList());
     }
+    
+    
     
     public Object visitAssignmentStatement(Pcl4Parser.AssignmentStatementContext ctx)
     {
         System.out.println("Visiting assignment statement");
-        
         String variableName = ctx.lhs().variable().getText();
         visit(ctx.lhs());
         Object value = visit(ctx.rhs());
+        //assign(variableName, value);
         
-        
-        System.out.println("Will assign value " + value +
+        System.out.println("Will assign value " + (Integer) value +
                            " to variable " + variableName);
-        
-        SymtabEntry varId = new SymtabEntry(variableName);
-        varId.setValue(value); 
-        
-        
         return null;
     }
     
+    
     public Object visitRepeatStatement(Pcl4Parser.RepeatStatementContext ctx)
     {
-        System.out.println("Visiting REPEAT statement");
+       System.out.println("Visiting REPEAT statement");
+    	Pcl4Parser.StatementListContext list = ctx.statementList();
+    	Object b;
+    	
+    	do {
+    		visit(list);
+    		b = visit(ctx.expression());
+    	} while (b.equals(false));
+    	
         return null;
     }
     
     public Object visitWhileStatement(Pcl4Parser.WhileStatementContext ctx) 
     {
     	System.out.println("Visiting WHILE statement");
-    		Object value = visit(ctx.expression());
-    		System.out.println(value); 
-    	
+    	Pcl4Parser.StatementListContext list = ctx.statementList();
+    	Object b = false;
+
+    	while (b.equals(false)) {
+    		
+    		visit(list);
+    		b = visit(ctx.expression());
+    	}
+
     	return null;   
     }
+   
+    //TODO
+    public Object visitIfStatement(Pcl4Parser.IfStatementContext ctx) {
+    	System.out.println("Visiting IF statement");
+    	return null;
+    }
     
+    //TODO
     public Object visitForStatement(Pcl4Parser.ForStatementContext ctx) {
     	System.out.println("Visiting FOR statement");
+    	return null; 
+    }
+    
+    //TODO
+    public Object visitCaseStatement(Pcl4Parser.CaseStatementContext ctx) {
+    	System.out.println("Visiting CASE statement");
     	return null; 
     }
     
@@ -88,11 +112,29 @@ public class Executor extends Pcl4BaseVisitor<Object>
         return null;
     }
     
-    
+    //TODO
     public Object visitExpression(Pcl4Parser.ExpressionContext ctx)
     {
         System.out.println("Visiting expression");
         return visitChildren(ctx);
+    }
+    
+    //TODO
+    /*public Object visitSimpleExpression(Pcl4Parser.SimpleExpressionContext ctx) {
+    	System.out.println("Visiting simple expression");
+    	return null;
+    }*/
+    
+    //TODO
+    /*
+    public Object visitTerm(Pcl4Parser.TermContext ctx) {
+    	System.out.println("Visiting term");
+    	return null;
+    }*/
+    
+    public Object visitParenthesizedExpression(Pcl4Parser.ParenthesizedExpressionContext ctx) {
+    	System.out.println("Visiting parenthesized expression");
+    	return null; 
     }
     
     //TODO : return variable value
@@ -100,30 +142,37 @@ public class Executor extends Pcl4BaseVisitor<Object>
     {
         System.out.print("Visiting variable ");
         String variableName = ctx.getText();
-        Object value = ctx.IDENTIFIER();
+        ctx.start.getLine();         
         
-        System.out.println(value);
+        //Object value = ctx.IDENTIFIER();
+        System.out.println(variableName);
+        
+        
         return null;
     }
+   
     
 
+
     public Object visitIntegerConstant(Pcl4Parser.IntegerConstantContext ctx) {
-    	Object value = visit(ctx.INTEGER()); 
+    	Integer value = (Integer) visit(ctx.INTEGER()); 
     	return value;
     }
     
+    
     public Object visitNumber(Pcl4Parser.NumberContext ctx)
     {
-        System.out.println("Visiting number: got value ");
+        System.out.print("Visiting number: got value ");
         String text = ctx.unsignedNumber().integerConstant()
                                           .INTEGER().getText();
         Integer value = Integer.valueOf(text);
+        System.out.println(value);
         
         return value;
     }
     
     public Object visitRealConstant(Pcl4Parser.RealConstantContext ctx) {
-    	Object value = visit(ctx.REAL());
+    	Double value = (Double) visit(ctx.REAL());
     	return value; 
     }
 }
