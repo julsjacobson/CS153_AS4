@@ -43,7 +43,7 @@ public class Executor extends Pcl4BaseVisitor<Object>
         
         String variableName = ctx.lhs().variable().getText();
         visit(ctx.lhs());
-        int value = (Integer)visit(ctx.rhs());
+        Object value = visit(ctx.rhs());
         
         
         System.out.println("Will assign value " + value +
@@ -114,7 +114,7 @@ public class Executor extends Pcl4BaseVisitor<Object>
     
     public Object visitNumber(Pcl4Parser.NumberContext ctx)
     {
-        System.out.print("Visiting number: got value ");
+        System.out.println("Visiting number: got value ");
         String text = ctx.unsignedNumber().integerConstant()
                                           .INTEGER().getText();
         Integer value = Integer.valueOf(text);

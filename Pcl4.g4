@@ -16,22 +16,27 @@ statement : compoundStatement
           | repeatStatement
           | writeStatement
           | whileStatement
-          //| ifStatement
-          |forStatement
-          //|caseStatement
+          | ifStatement
+          | forStatement
+          | caseStatement
           | writelnStatement
           | emptyStatement
           ;
 
-compoundStatement : BEGIN statementList END ;
+compoundStatement : BEGIN statementList END;
 emptyStatement    : ;
      
-statementList       : statement ( ';' statement )* ;
+statementList       : statement (SEMI statement )* ;
 assignmentStatement : lhs ':=' rhs ;
 repeatStatement     : REPEAT statementList UNTIL expression ;
 whileStatement      : WHILE expression DO statementList;
-forStatement: FOR IDENTIFIER ':=' expression TO expression DO statement
-			| FOR IDENTIFIER ':=' expression DOWNTO expression DO statement;
+forStatement        : FOR IDENTIFIER ':=' expression (TO | DOWNTO) expression DO statement;
+ifStatement         : IF expression THEN statement (ELSE statement)?;
+caseStatement       : CASE expression OF (constantList COLON statement (SEMI? constantList COLON statement)* SEMI?)? END;
+
+constantList        : constant (COMMA constant)*;
+constant            : (PLUS || MINUS) (IDENTIFIER | number) | stringConstant;
+
 
 lhs : variable ;
 rhs : expression ;
@@ -153,6 +158,13 @@ NEWLINE : '\r'? '\n' -> skip  ;
 WS      : [ \t]+ -> skip ; 
 
 QUOTE     : '\'' ;
+SEMI      : ';'  ;
+COLON     : ':'  ;
+COMMA     : ','  ; 
+PLUS      : '+'  ;
+MINUS     : '-'  ;
+EQUAL     : '='  ;
+PERIOD    : '.'  ;
 CHARACTER : QUOTE CHARACTER_CHAR QUOTE ;
 STRING    : QUOTE STRING_CHAR* QUOTE ;
 
