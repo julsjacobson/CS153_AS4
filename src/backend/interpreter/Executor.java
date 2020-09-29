@@ -1,9 +1,12 @@
 package backend.interpreter;
 
 import antlr4.*;
+import intermediate.symtab.SymtabEntry;
 
 public class Executor extends Pcl4BaseVisitor<Object>
 {
+
+    
     public Object visitProgram(Pcl4Parser.ProgramContext ctx)
     {
         System.out.println("Visiting program");
@@ -30,26 +33,47 @@ public class Executor extends Pcl4BaseVisitor<Object>
     
     public Object visitCompoundStatement(Pcl4Parser.CompoundStatementContext ctx)
     {
-        System.out.println("Visiting compound statement");
+        System.out.println("Visiting compound statement");        
         return visit(ctx.statementList());
     }
     
     public Object visitAssignmentStatement(Pcl4Parser.AssignmentStatementContext ctx)
     {
         System.out.println("Visiting assignment statement");
+        
         String variableName = ctx.lhs().variable().getText();
         visit(ctx.lhs());
-        Object value = visit(ctx.rhs());
+        int value = (Integer)visit(ctx.rhs());
         
-        System.out.println("Will assign value " + (Integer) value +
+        
+        System.out.println("Will assign value " + value +
                            " to variable " + variableName);
+        
+        SymtabEntry varId = new SymtabEntry(variableName);
+        varId.setValue(value); 
+        
+        
         return null;
     }
     
     public Object visitRepeatStatement(Pcl4Parser.RepeatStatementContext ctx)
     {
         System.out.println("Visiting REPEAT statement");
-        return visit(ctx.statementList());
+        return null;
+    }
+    
+    public Object visitWhileStatement(Pcl4Parser.WhileStatementContext ctx) 
+    {
+    	System.out.println("Visiting WHILE statement");
+    		Object value = visit(ctx.expression());
+    		System.out.println(value); 
+    	
+    	return null;   
+    }
+    
+    public Object visitForStatement(Pcl4Parser.ForStatementContext ctx) {
+    	System.out.println("Visiting FOR statement");
+    	return null; 
     }
     
     public Object visitWriteStatement(Pcl4Parser.WriteStatementContext ctx)
@@ -64,19 +88,28 @@ public class Executor extends Pcl4BaseVisitor<Object>
         return null;
     }
     
+    
     public Object visitExpression(Pcl4Parser.ExpressionContext ctx)
     {
         System.out.println("Visiting expression");
         return visitChildren(ctx);
     }
     
+    //TODO : return variable value
     public Object visitVariable(Pcl4Parser.VariableContext ctx)
     {
         System.out.print("Visiting variable ");
         String variableName = ctx.getText();
-        System.out.println(variableName);
+        Object value = ctx.IDENTIFIER();
         
-        return null;  // should return the variable's value!
+        System.out.println(value);
+        return null;
+    }
+    
+
+    public Object visitIntegerConstant(Pcl4Parser.IntegerConstantContext ctx) {
+    	Object value = visit(ctx.INTEGER()); 
+    	return value;
     }
     
     public Object visitNumber(Pcl4Parser.NumberContext ctx)
@@ -85,8 +118,12 @@ public class Executor extends Pcl4BaseVisitor<Object>
         String text = ctx.unsignedNumber().integerConstant()
                                           .INTEGER().getText();
         Integer value = Integer.valueOf(text);
-        System.out.println(value);
         
         return value;
+    }
+    
+    public Object visitRealConstant(Pcl4Parser.RealConstantContext ctx) {
+    	Object value = visit(ctx.REAL());
+    	return value; 
     }
 }
