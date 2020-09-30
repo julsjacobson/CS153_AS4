@@ -1,7 +1,7 @@
-package backend.interpreter;
+package antlr4.backend.interpreter;
 
 import antlr4.*;
-import intermediate.symtab.SymtabEntry;
+import intermediate.symtab.*;
 
 public class Executor extends Pcl4BaseVisitor<Object>
 {
@@ -46,9 +46,10 @@ public class Executor extends Pcl4BaseVisitor<Object>
         visit(ctx.lhs());
         Object value = visit(ctx.rhs());
         //assign(variableName, value);
-        
-        System.out.println("Will assign value " + (Integer) value +
-                           " to variable " + variableName);
+        SymtabEntry variableID = new SymtabEntry(variableName);
+        //variableID.setValue((Double)value);
+        //System.out.println("Will assign value " +  value +
+                           //" to variable " + variableName);
         return null;
     }
     
@@ -85,6 +86,13 @@ public class Executor extends Pcl4BaseVisitor<Object>
     //TODO
     public Object visitIfStatement(Pcl4Parser.IfStatementContext ctx) {
     	System.out.println("Visiting IF statement");
+    	boolean testCondition = (Boolean)visit(ctx.expression());
+    	if(testCondition) {
+    		visit(ctx.getChild(3));
+    	}
+    	else if (ctx.getChildCount() > 4) {
+    		visit(ctx.getChild(5));
+    	}
     	return null;
     }
     
@@ -115,22 +123,77 @@ public class Executor extends Pcl4BaseVisitor<Object>
     //TODO
     public Object visitExpression(Pcl4Parser.ExpressionContext ctx)
     {
-        System.out.println("Visiting expression");
-        return visitChildren(ctx);
+        if(ctx.getChildCount() == 1) {
+        	return visitChildren(ctx);
+        }
+        //Binary Expression
+        Double lhs = (Double) visit(ctx.getChild(0));
+        Double rhs = (Double) visit(ctx.getChild(2));
+        String op = ctx.relOp().getText();
+        switch(op) {
+        	case "="  : return lhs == rhs;
+        	case "<>" : return lhs != rhs; 
+        	case "<"  : return lhs < rhs; 
+        	case "<=" : return lhs <= rhs; 
+        	case ">"  : return lhs > rhs; 
+        	case ">=" : return lhs >= rhs; 
+        	default   : System.out.println("Error: Invalid Relational Operator");
+        }
+        return null;
     }
     
     //TODO
-    /*public Object visitSimpleExpression(Pcl4Parser.SimpleExpressionContext ctx) {
+    public Object visitSimpleExpression(Pcl4Parser.SimpleExpressionContext ctx) {
     	System.out.println("Visiting simple expression");
-    	return null;
-    }*/
+    	boolean neg = false;
+    	if(ctx.sign() != null) {
+    		neg = (ctx.sign().getText().equals("=")) ? true : false; 
+    		ctx.children.remove(ctx.sign());
+    	}
+    	
+    	if(ctx.getChildCount() > 1) {
+    		Double value = (Double) visit(ctx.getChild(0));
+    		for(int i = 1; i < ctx.getChildCount(); i+=2) {
+    			String op = (String) visit(ctx.getChild(i));
+    			Double rhs = (Double) visit(ctx.getChild(i+1));
+    			
+    			switch (op) {
+        			case "+" : value += rhs; break;
+        			default  : value -= rhs; break;
+        		}
+    		}
+    		return (neg) ? -1* value : value;
+    	}
+    	else {
+    		return visit(ctx.getChild(0));
+    	}
+    }
     
     //TODO
-    /*
     public Object visitTerm(Pcl4Parser.TermContext ctx) {
     	System.out.println("Visiting term");
-    	return null;
-    }*/
+		if(ctx.getChildCount() > 1) {
+			Double value = (Double) visit(ctx.getChild(0));
+			for(int i = 1; i < ctx.getChildCount(); i+=2) {
+				String op = (String) visit(ctx.getChild(i));
+				Double rhs = (Double) visit(ctx.getChild(i+1));
+				switch(op) {
+				 	case "/" : {
+				 		if(rhs != 0.0)
+				 			value /= rhs;
+				 		else {
+				 			System.out.println("Error: Division by Zero!");
+				 			return null;
+				 		}
+				 	}
+				 	default  : value *= rhs; 
+				}
+			}
+			return value;
+		}
+		else 
+			return visit(ctx.getChild(0));
+    }
     
     public Object visitParenthesizedExpression(Pcl4Parser.ParenthesizedExpressionContext ctx) {
     	System.out.println("Visiting parenthesized expression");
@@ -155,7 +218,8 @@ public class Executor extends Pcl4BaseVisitor<Object>
 
 
     public Object visitIntegerConstant(Pcl4Parser.IntegerConstantContext ctx) {
-    	Integer value = (Integer) visit(ctx.INTEGER()); 
+    	Integer value = Integer.valueOf(ctx.getText()); 
+    	//System.out.print(value);
     	return value;
     }
     
@@ -163,16 +227,22 @@ public class Executor extends Pcl4BaseVisitor<Object>
     public Object visitNumber(Pcl4Parser.NumberContext ctx)
     {
         System.out.print("Visiting number: got value ");
-        String text = ctx.unsignedNumber().integerConstant()
-                                          .INTEGER().getText();
-        Integer value = Integer.valueOf(text);
-        System.out.println(value);
+        if(ctx.unsignedNumber().integerConstant() == null) {
+        	Double value = (Double) visitRealConstant(ctx.unsignedNumber().realConstant());
+        	System.out.println(value);
+        	return value;
+        }
+        else {
+        	Integer value = (Integer) visitIntegerConstant(ctx.unsignedNumber().integerConstant());
+        	System.out.println(value);
+        	return value;
+        }
         
-        return value;
     }
     
     public Object visitRealConstant(Pcl4Parser.RealConstantContext ctx) {
-    	Double value = (Double) visit(ctx.REAL());
+    	Double value = Double.valueOf(ctx.getText());
+    	//System.out.print(value);
     	return value; 
     }
 }
