@@ -1,0 +1,12 @@
+program TestIf;
+    
+begin
+    i := 1;
+    j := 2;
+    x := 5;
+    y := 3.14;
+    
+    
+    if not (i <= j) then if i div 22 <= j then j := 9 else j := -9;
+    
+end.
